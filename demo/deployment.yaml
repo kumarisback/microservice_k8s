@@ -1,0 +1,89 @@
+
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: demo1
+    name: demo1
+    namespace: default
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: demo1
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          app: demo1
+      spec:
+        containers:
+        - image: docker.io/kumarisbeck/micro-serviceone:0.0.5-SNAPSHOT
+          imagePullPolicy: IfNotPresent
+          name: micro-servicetwo
+          envFrom:
+          - configMapRef:
+              name: demo1
+          # env:
+          #   - name: DEMO2_URI_SERVICE_HOST
+          #     value: http://demo2
+        restartPolicy: Always
+        tolerations:
+        - effect: NoSchedule
+          key: kubernetes.io/arch
+          operator: Equal
+          value: amd64
+        
+  
+
+---
+
+
+  apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: demo1
+    name: demo1
+    namespace: default
+  spec:
+    allocateLoadBalancerNodePorts: true
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 8081
+      protocol: TCP
+      targetPort: 8081
+    selector:
+      app: demo1
+    sessionAffinity: None
+    type: LoadBalancer
+  
+
+---
+# apiVersion: v1
+# data:
+#   DEMO2_URI_SERVICE_HOST: http://demo2
+# kind: ConfigMap
+# metadata:
+#   name: demo1
+#   namespace: default
+
+
+# watch http and https in url it will give ssl error
+apiVersion: v1
+data:
+  DEMO2_URI_SERVICE_HOST: http://demo2
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"DEMO2_URI_SERVICE_HOST":"http://demo2"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"demo1","namespace":"default"}}
+  name: demo1
+  namespace: default

@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  DEMO2_URI_SERVICE_HOST: https://demo1
+kind: ConfigMap
+metadata:
+  name: demo1
+  namespace: default
